@@ -85,6 +85,9 @@ export class WebGLRenderer {
     this.gl.clearColor(1.0, 0.0, 0.0, 1.0);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
+    const pMatrix = this.context.camera.projectionMatrix();
+    const vMatrix = this.context.camera.viewMatrix();
+
     // // 使用着色器程序
     // gl.useProgram(this.renderContext.shaderProgram);
 
