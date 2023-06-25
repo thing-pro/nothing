@@ -23,23 +23,14 @@ export class Executable {
   async execute(parameters) {}
 }
 
-/**
- * 模块类
- */
-export class BaseModule {
-  constructor(name) {
-    this.name = name;
-  }
+export class ContextExecutable extends Executable {
+  constructor(context) {
+    super();
 
-  /**
-   * 子类必须实现该方法，用于执行特定的行为或操作
-   * @param {string} uri - 执行操作的唯一标识符
-   * @param {object} parameters - 执行操作所需的参数
-   * @returns {Promise<any>} - 返回执行结果的 Promise 对象
-   */
-  async execute(uri, parameters) {
-    // 子类需实现该方法
+    this.context = context;
   }
+  // 这个方法需要实现类去实现
+  async execute(parameters) {}
 }
 
 /**
@@ -85,6 +76,25 @@ export class ModuleGroup {
 
     const actionName = rest.join('/');
     return module.execute(actionName, parameters);
+  }
+}
+
+/**
+ * 模块类
+ */
+export class BaseModule {
+  constructor(name) {
+    this.name = name;
+  }
+
+  /**
+   * 子类必须实现该方法，用于执行特定的行为或操作
+   * @param {string} uri - 执行操作的唯一标识符
+   * @param {object} parameters - 执行操作所需的参数
+   * @returns {Promise<any>} - 返回执行结果的 Promise 对象
+   */
+  async execute(uri, parameters) {
+    // 子类需实现该方法
   }
 }
 

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title></title>
+</head>
+<body>
+  <canvas id="myApp"></canvas>
+  <script type="module">
+    import * as NT from './core.js';
+  
+    const moduleGroup = new NT.ModuleGroup('group');
+    const rendererModule = new NT.RendererModule();
+  
+    moduleGroup.add(rendererModule);
+    
+    const canvas = document.getElementById('myApp');
+    canvas.width = 400;
+    canvas.height = 300;
+
+
+    async function run () {
+      const initResult = await rendererModule.execute('init', { canvas });
+      console.log(`init ${initResult}`);
+
+      if (initResult) {
+        // 初始化成功之后
+        const loadResult = await rendererModule.execute('load', { url: './data.json' })
+        console.log(`load ${initResult}`);
+        const renderResult = await rendererModule.execute('render');
+        console.log(`render ${initResult}`);
+      }
+
+    }
+
+    run();
+  </script>
+  
+</body>
+</html>
