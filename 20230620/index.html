@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title></title>
+</head>
+<script type="module">
+  import * as NT from './core.js';
+
+  class PlusAction extends NT.Executable {
+    async execute(parameters) {
+      const sum = parameters.a + parameters.b;
+
+      return sum;
+    }
+  }
+
+  class PlusModule extends NT.StdModule {
+    constructor() {
+      super('plus');
+
+      this.addExecutable('plus', new PlusAction());
+    }
+  }
+
+  class UsePlusAction extends NT.Executable {
+    constructor(plusModule) {
+      super();
+      this.plusModule = plusModule;
+    }
+    async execute(parameters) {
+      return await this.plusModule.execute('plus', parameters);
+    }
+  }
+
+  class UsePlusModule extends NT.StdModule {
+    constructor(plusModule) {
+      super('useplus');
+
+      this.plusModule = plusModule;
+      this.addExecutable('plus', new UsePlusAction(this.plusModule));
+    }
+  }
+
+  class MinusModule extends NT.WorkerModule {
+    constructor(worker) {
+      super('minus', worker);
+    }
+  }
+
+  class UseMinusModule extends NT.WorkerModule {
+    constructor(worker) {
+      super('useminus', worker);
+    }
+  }
+  
+
+  class LoadModule extends NT.StdModule {
+    constructor() {
+      super('load');
+
+      this.mem = new Map();
+      const self = this;
+
+      this.addExecutable('mem', {
+        async execute(parameters) {
+          self.mem.set(parameters.name, parameters.value);
+          return true;
+        }
+      });
+      this.addExecutable('getmem', {
+        async execute(parameters) {
+          return self.mem.get(parameters.name);
+        }
+      });
+    }
+  }
+
+  class UseLoadGetAction extends NT.Executable {
+    constructor(loadModule) {
+      super();
+      this.loadModule = loadModule;
+    }
+    async execute(parameters) {
+      return this.loadModule.execute('getmem', parameters);
+    }
+  }
+  class UseLoadSetAction extends NT.Executable {
+    constructor(loadModule) {
+      super();
+      this.loadModule = loadModule;
+    }
+    async execute(parameters) {
+      return this.loadModule.execute('mem', parameters);
+    }
+  }
+
+  class UseLoadModule extends NT.StdModule {
+    constructor(loadModule) {
+      super('useload');
+
+      this.loadModule = loadModule;
+      this.addExecutable('mem', new UseLoadSetAction(this.loadModule));
+      this.addExecutable('getmem', new UseLoadGetAction(this.loadModule));
+    }
+  }
+
+  async function run() {
+
+    // 模块群组
+    // 群组的作用是限制模块之间的调用范围
+    const moduleGroup = new NT.ModuleGroup('group');
+
+    // 模块
+    const plusModule = new PlusModule();
+    const usePlusModule = new UsePlusModule(plusModule);
+
+    const minusWorker = new Worker('./minus.js');
+
+    const minusModule = new MinusModule(minusWorker);
+
+    const useMinusWorker = new Worker('./useminus.js');
+
+    const useMinusModule = new UseMinusModule(useMinusWorker);
+
+    moduleGroup.add(minusModule);
+    moduleGroup.add(plusModule);
+    moduleGroup.add(usePlusModule);
+    moduleGroup.add(useMinusModule);
+
+    // 直接 调用 模块 带返回
+    const plusResult = await plusModule.execute('plus', { a: 1, b: 2 });
+    console.log(`主线程 调用 模块 带返回 ${plusResult}`);
+
+    // 模块内 调用 模块 带返回
+    const usePlusResult = await usePlusModule.execute('plus', { a: 1, b: 2 });
+    console.log(`模块 调用 模块 带返回 ${usePlusResult}`);
+
+    // 直接 调用 worker 模块 带返回
+    const minusResult = await minusModule.execute('minus', { a: 1, b: 2 });
+    console.log(`直接 调用 worker 模块 带返回 ${minusResult}`);
+
+    // worker 模块内 调用 模块 带返回
+    const useMinusResult = await useMinusModule.execute('minus', { a: 1, b: 2 });
+    console.log(`worker 模块内 调用 模块 带返回 ${useMinusResult}`);
+
+    // 每个 module 实例只能在一个模块群组注册 可以修改注册
+    // 多个群组 需要 单一实例 的情况 比如 缓存实例几个群组的模块 共享一个缓存模块实例 一般这种实例不需要调用其他实例仅返回就够了  
+    // 这种情况是可以 注册到多个群组的
+    // 也就是在共用模块里 只能被调用返回 不能调用其他模块 这个是必须的条件 实际上用其他模块也行 但是必须多个实例能同步信息
+
+    const moduleGroup1 = new NT.ModuleGroup('group1'); 
+    const moduleGroup2 = new NT.ModuleGroup('group2'); 
+
+    const loadModule = new LoadModule();
+    const useLoadModule1 = new UseLoadModule(loadModule);
+    const useLoadModule2 = new UseLoadModule(loadModule);
+    
+    moduleGroup1.add(loadModule);
+    moduleGroup1.add(useLoadModule1);
+
+    moduleGroup2.add(loadModule);
+    moduleGroup2.add(useLoadModule2);
+
+    // 设置mem a:10
+    const useLoadResult1 = await useLoadModule1.execute('mem', { name: 'a', value: 10 });
+    console.log(`设置mem a:10 ${useLoadResult1}`);
+    // 获取 mem a
+    const useLoadResult2 = await useLoadModule2.execute('getmem', { name: 'a' });
+    console.log(`获取mem a ${useLoadResult2}`);
+  }
+
+  run();
+
+</script>
+
+</html>

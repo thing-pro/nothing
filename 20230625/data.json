@@ -1,0 +1,50 @@
+{
+  "buffers": {
+    "1": {
+      "buffer": [ 0.5, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0 ],
+      "byteLength": 36
+    }
+  },
+  "bufferViews": {
+    "1": {
+      "buffer": "1",
+      "byteOffset": 0,
+      "byteLength": 36,
+      "byteStride": 0
+    }
+  },
+  "accessors": {
+    "1": {
+      "bufferView": "1",
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 3,
+      "type": "VEC3",
+      "max": [1.0, 1.0, 0.0],
+      "min": [0.0, 0.0, 0.0]
+    }
+  },
+  "meshes": {
+    "1": {
+      "position": "1",
+      "material": "1",
+      "mode": 4
+    }
+  },
+  "nodes": {
+    "1": {
+      "mesh": "1"
+    }
+  },
+  "scenes": {
+    "1": {
+      "nodes": ["1"]
+    }
+  },
+  "scene": "1",
+  "materials": {
+    "1": {
+      "baseColorFactor": [1.0, 0.0, 0.0]
+    }
+  }
+}
